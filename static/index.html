@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>präsentation_ai</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div>
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <div>
+            <div class="brand-name">präsentation_<em>ai</em></div>
+            <div class="brand-sub">Lokale Analyseoberfläche</div>
+          </div>
+        </div>
+
+        <nav class="nav" aria-label="Navigation">
+          <button class="nav-item is-active" type="button" data-view="analyse">
+            <span class="nav-dot"></span> Neue Analyse
+          </button>
+          <button class="nav-item" type="button" data-view="dateien">
+            <span class="nav-dot"></span> Alle Dateien
+          </button>
+          <button class="nav-item" type="button" data-view="verlauf">
+            <span class="nav-dot"></span> Verlauf
+          </button>
+        </nav>
+      </div>
+
+      <div class="history-panel">
+        <div id="historyEmpty" class="history-empty">Noch keine Analysen vorhanden.</div>
+        <ul id="historyList" class="history-list"></ul>
+      </div>
+
+      <div class="sidebar-foot">
+        <span class="pulse-dot"></span>
+        Läuft lokal auf deinem Rechner
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="stage-head">
+        <div class="eyebrow">Web-Interface</div>
+        <h1>Präsentationen hochladen, analysieren, auswerten.</h1>
+        <p class="stage-desc">
+          Diese Oberfläche nutzt deine bestehende Pipeline aus <code>main.py</code>.
+          Es wird nichts in die Cloud gesendet — alle Analysen laufen lokal auf diesem Computer.
+        </p>
+      </header>
+
+      <section id="stageUpload">
+        <div id="dropzone" class="dropzone" tabindex="0">
+          <div class="dropzone-meter" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <div id="dropzoneTitle" class="dropzone-title">Video hierher ziehen oder klicken zum Auswählen</div>
+          <div id="dropzoneSub" class="dropzone-sub">MP4, MOV, MKV — Audio-Spur wird automatisch extrahiert</div>
+          <input id="fileInput" type="file" accept="video/*" hidden />
+        </div>
+
+        <div class="options-row">
+          <label class="check">
+            <input id="skipVideo" type="checkbox" />
+            <span class="check-box"></span>
+            <span class="check-label">Video-Modul überspringen <small>spart Zeit, keine Körpersprachen-Analyse</small></span>
+          </label>
+          <label class="check">
+            <input id="skipEmotion" type="checkbox" />
+            <span class="check-box"></span>
+            <span class="check-label">Emotions-Modul überspringen <small>spart RAM, keine emotionale Variation</small></span>
+          </label>
+        </div>
+
+        <button id="startBtn" class="btn-primary" type="button" disabled>Analyse starten</button>
+        <div id="uploadError" class="error-banner" hidden></div>
+      </section>
+
+      <section id="stageProgress" hidden>
+        <div class="progress-header">
+          <h2 id="progressTitle">Analyse läuft …</h2>
+          <span class="elapsed-badge"><span id="elapsedTime">0:00</span></span>
+        </div>
+        <p id="progressSub" class="stage-desc"></p>
+        <ul id="steplist" class="steplist"></ul>
+        <div class="progress-actions">
+          <button id="backToUpload" class="btn-ghost" type="button" hidden>Zurück</button>
+        </div>
+      </section>
+
+      <section id="stageDashboard" hidden>
+        <p id="dashboardSub" class="stage-desc"></p>
+
+        <div class="score-hero">
+          <div class="score-hero-left">
+            <div class="score-hero-label">Gesamtscore</div>
+            <div id="gesamtScoreValue" class="score-hero-number">—<small>/100</small></div>
+            <button id="gesamtReportBtn" class="btn-ghost small" type="button">
+              Gesamtreport ansehen
+            </button>
+          </div>
+          <div id="modalitaetBars" class="score-hero-bars"></div>
+        </div>
+
+        <div id="tipsWrap"></div>
+
+        <h2 class="section-label">Einzelne Module <span class="section-hint">— klicken für Details &amp; Report</span></h2>
+        <div id="moduleGrid" class="module-grid"></div>
+
+        <div id="konsistenzWrap"></div>
+
+        <div class="dashboard-actions">
+          <button id="newAnalysisBtn2" class="btn-ghost" type="button">Neue Analyse starten</button>
+        </div>
+      </section>
+
+      <section id="stageDateien" hidden>
+        <h2 class="stage-files-title">Alle Ausgabedateien</h2>
+        <p class="stage-desc">Alle Reports, Transkripte und JSON-Outputs der letzten Analysen. Klicken zum Anzeigen, Pfeil zum Herunterladen.</p>
+        <div id="dateiFilter" class="datei-filter"></div>
+        <div id="dateiListe" class="datei-liste"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Drawer für Report-Ansicht -->
+  <div id="drawerOverlay" class="drawer-overlay"></div>
+  <aside id="drawer" class="drawer" aria-label="Report-Ansicht">
+    <div class="drawer-head">
+      <div>
+        <div id="drawerEyebrow" class="eyebrow"></div>
+        <h2 id="drawerTitle"></h2>
+      </div>
+      <button id="drawerClose" class="drawer-close" type="button" aria-label="Schließen">×</button>
+    </div>
+
+    <!-- Kurz / Detail Toggle -->
+    <div class="drawer-toggle" id="drawerToggle">
+      <button class="drawer-toggle-btn is-active" id="toggleKurz" type="button" data-ebene="kurz">Kurzfassung</button>
+      <button class="drawer-toggle-btn" id="toggleDetail" type="button" data-ebene="detail">Detailansicht</button>
+    </div>
+
+    <!-- Download-Leiste: TXT · PDF · Word -->
+    <div class="drawer-dl-bar" id="drawerDlBar">
+      <a id="drawerDlTxt" class="drawer-dl-btn dl-txt" href="#" download>↓ TXT</a>
+      <button id="drawerDlPdf" class="drawer-dl-btn dl-pdf" type="button">↓ PDF</button>
+      <button id="drawerDlWord" class="drawer-dl-btn dl-word" type="button">↓ Word (.docx)</button>
+    </div>
+
+    <!-- Strukturierter Report-Inhalt -->
+    <div class="drawer-body" id="drawerBody">
+      <div id="drawerRendered"></div>
+    </div>
+  </aside>
+
+  <!-- Unsichtbarer Print-Bereich für PDF-Export -->
+  <div id="print-area"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
